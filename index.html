@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安科小助手</title>
+    <style>
+        /* 字體設定：中英文分開 */
+        @font-face {
+            font-family: 'FELIXTI';
+            src: url('C:/Windows/Fonts/FELIXTI.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'JinMeiPen';
+            src: url('C:/Windows/Fonts/金梅细黑钢笔字体.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'FELIXTI', 'JinMeiPen', serif;
+            background-color: #1a1a1a;
+            color: #d4d0c8;
+            margin: 0;
+            padding: 0;
+            background-image: url('parchment-texture.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        /* 中英文分別指定字體 */
+        body, #storyContainer, #inputContainer, #userInput, #sendButton, #micButton {
+            font-family: 'FELIXTI', 'JinMeiPen', serif;
+        }
+        /* 中文字用 JinMeiPen */
+        body :lang(zh), body *:lang(zh), body *:lang(zh-TW), body *:lang(zh-Hant) {
+            font-family: 'JinMeiPen', 'FELIXTI', serif;
+        }
+        /* 英文字母用 FELIXTI */
+        body, body * {
+            font-family: 'FELIXTI', 'JinMeiPen', serif;
+        }
+
+        /* 哥德奇幻風格CSS 其餘樣式同原本 */
+        #modeSelector {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #d4d0c8;
+            padding: 5px 10px;
+            border: 1px solid #555;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        #storyContainer {
+            max-width: 800px;
+            margin: 60px auto;
+            padding: 20px;
+            border: 2px solid #555;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            overflow-y: auto;
+            max-height: 600px;
+            box-shadow: 5px 5px 15px #000;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #333;
+            color: #eee;
+            text-align: right;
+        }
+
+        .ai-message {
+            background-color: #444;
+            color: #fff;
+            text-align: left;
+        }
+
+        #inputContainer {
+            display: flex;
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        #userInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 5px 0 0 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+        }
+
+        #sendButton {
+            padding: 10px 15px;
+            border: none;
+            background-color: #8b0000;
+            color: #fff;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            font-family: 'FELIXTI', 'JinMeiPen', serif;
+        }
+
+        #sendButton:hover {
+            background-color: #a52a2a;
+        }
+
+        #micButton {
+            margin-left: 10px;
+            padding: 10px;
+            border: none;
+            background-color: #555;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #micButton.recording {
+            background-color: #ff0000;
+        }
+
+        /* 捲軸樣式 (webkit) */
+        #storyContainer::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #storyContainer::-webkit-scrollbar-track {
+            background: #666;
+            border-radius: 10px;
+        }
+
+        #storyContainer::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        #storyContainer::-webkit-scrollbar-thumb:hover {
+            background: #aaa;
+        }
+
+        /* TRPG模式選擇器樣式 */
+        #trpgModeSelector select {
+            font-family: 'FELIXTI', 'JinMeiPen', serif;
+            font-size: 16px;
+            border: 1px solid #555;
+            transition: all 0.3s ease;
+        }
+
+        #trpgModeSelector select:hover {
+            border-color: #8b0000;
+        }
+
+        /* 場景和角色資訊區域樣式 */
+        #scenarioDisplay, #characterDisplay {
+            transition: all 0.3s ease;
+            border: 1px solid #555;
+        }
+
+        #scenarioDisplay:hover, #characterDisplay:hover {
+            border-color: #8b0000;
+            box-shadow: 0 0 10px rgba(139, 0, 0, 0.3);
+        }
+
+        #currentScenario, #characterSheet {
+            line-height: 1.6;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+        }
+
+        h3 {
+            font-family: 'JinMeiPen', serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; margin-top: 20px;font-family:'JinMeiPen';">安科/安價助手</h1>
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        
+        <!-- 原有的故事容器和輸入區域 -->
+        <div id="storyContainer"></div>
+        <div id="inputContainer">
+            <textarea id="userInput" placeholder="輸入你的訊息..." onkeypress="handleKeyPress(event)"></textarea>
+            <button id="sendButton" onclick="sendMessage()">發送</button>
+            <button id="micButton" onclick="toggleSpeechRecognition()">🎤</button>
+        </div>
+
+       
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupModeSelector();
+        });
+    </script>
+</body>
+</html>
